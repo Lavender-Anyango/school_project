@@ -1,4 +1,3 @@
-
 from datetime import datetime
 from rest_framework import serializers
 from student.models import Student
@@ -12,14 +11,34 @@ class CourseSerializer(serializers.ModelSerializer):
     class Meta:
         model = Course
         fields = '__all__'
-        
+
+
 class StudentSerializer(serializers.ModelSerializer):
     courses = CourseSerializer(many=True)
 
     class Meta:
         model = Student
-        # fields = '__all__'
-        exclude = ["email"]
+        fields = '__all__'  
+
+
+class MinimalStudentSerializer(serializers.ModelSerializer):
+    full_name = serializers.SerializerMethodField()
+    age = serializers.SerializerMethodField()
+
+    def get_full_name(self, student):
+        return f"{student.first_name} {student.last_name}"
+
+    def get_age(self, student):
+        if student.date_of_birth:
+            today = datetime.now().date()
+            age = today.year - student.date_of_birth.year - ((today.month, today.day) < (student.date_of_birth.month, student.date_of_birth.day))
+            return age
+        return None
+
+    class Meta:
+        model = Student
+        fields = ['id', 'full_name', 'email', 'age']
+
 
 class TeacherSerializer(serializers.ModelSerializer):
     class Meta:
@@ -32,25 +51,12 @@ class ClassroomSerializer(serializers.ModelSerializer):
         model = Classroom
         fields = '__all__'
 
+
 class ClassPeriodSerializer(serializers.ModelSerializer):
+    teacher = TeacherSerializer() 
+    course = CourseSerializer()    
+    classroom = ClassroomSerializer()  
+
     class Meta:
         model = ClassPeriod
         fields = '__all__'
-
-class MininmalStudentSerializer(serializers.ModelSerializer):
-
-    full_name = serializers.SerializerMethodField()
-
-    def get_full_name(self, Student):
-            return f"{Student.first_name}  {Student.last_name}"
-    
-    def get_age(self, Student):
-        today = datetime.now()
-        age = today - Student.date_of_birth
-     
-    class Meta:
-        model = Student
-        fields = ['id', 'full_name', 'email']
-
-
-       
